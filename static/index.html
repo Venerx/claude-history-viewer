@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claude History</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+      crossorigin="anonymous"
+    />
+  </head>
+
+  <body>
+    <div id="app">
+      <aside id="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title-row">
+            <div class="sidebar-title">Claude History</div>
+            <button
+              id="sidebar-toggle"
+              title="折叠/展开侧边栏"
+              aria-label="Toggle sidebar"
+            >
+              ☰
+            </button>
+          </div>
+          <div class="search-wrap">
+            <svg
+              class="search-icon"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                cx="8.5"
+                cy="8.5"
+                r="5.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <line
+                x1="13"
+                y1="13"
+                x2="17"
+                y2="17"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <input
+              id="search"
+              type="search"
+              placeholder="Search conversations…"
+              autocomplete="off"
+              spellcheck="false"
+              list="search-history-list"
+            />
+            <datalist id="search-history-list"></datalist>
+          </div>
+          <select id="view-filter" title="会话筛选视图">
+            <option value="recent">Recent</option>
+            <option value="archived">Archived</option>
+            <option value="all">All</option>
+          </select>
+          <div id="result-count"></div>
+        </div>
+        <div id="conv-sections">
+          <section class="conv-section" id="pinned-section">
+            <div class="conv-section-header">
+              <div class="section-title-wrap">
+                <span class="section-title" id="pinned-title">Pinned</span>
+                <span class="section-subtitle" id="pinned-hint"
+                  >Shown separately from Recent</span
+                >
+              </div>
+              <button id="pinned-refresh" title="刷新置顶">↻</button>
+            </div>
+            <div id="pinned-list"></div>
+          </section>
+          <section class="conv-section" id="recent-section">
+            <div class="conv-section-header">
+              <span>Recent</span>
+            </div>
+            <div id="conv-list"></div>
+          </section>
+        </div>
+        <div id="load-more-wrap" hidden>
+          <button id="load-more">Load more</button>
+        </div>
+        <div id="sidebar-footer">
+          <button id="memories-btn" title="Memories">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d="M10 3C6.686 3 4 5.239 4 8c0 1.547.77 2.93 2 3.845V14h8v-2.155C15.23 10.93 16 9.547 16 8c0-2.761-2.686-5-6-5z"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+              <line
+                x1="7"
+                y1="14"
+                x2="13"
+                y2="14"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+              <line
+                x1="8"
+                y1="17"
+                x2="12"
+                y2="17"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <button id="projects-btn" title="Projects">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <rect
+                x="2"
+                y="5"
+                width="16"
+                height="12"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path d="M2 8h16" stroke="currentColor" stroke-width="1.2" />
+              <path
+                d="M6 5V3.5A1.5 1.5 0 017.5 2h5A1.5 1.5 0 0114 3.5V5"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+            </svg>
+          </button>
+          <button id="gallery-btn" title="Media Hub">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <rect
+                x="2"
+                y="4"
+                width="16"
+                height="12"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <circle
+                cx="7"
+                cy="8.5"
+                r="1.5"
+                stroke="currentColor"
+                stroke-width="1.2"
+              />
+              <path
+                d="M2 13l4-3.5 3 2.5 3-4 4 5"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <button id="att-report-btn" title="附件诊断报告">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d="M10 2a8 8 0 100 16A8 8 0 0010 2z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M10 9v5M10 7v.5"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+      </aside>
+      <div id="sidebar-resize" aria-hidden="true"></div>
+
+      <main id="main">
+        <div id="tabs-wrap">
+          <div id="tabs-list"></div>
+        </div>
+        <div id="empty-state">
+          <div class="empty-inner">
+            <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+              <rect
+                x="6"
+                y="10"
+                width="36"
+                height="28"
+                rx="4"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <line
+                x1="14"
+                y1="18"
+                x2="34"
+                y2="18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <line
+                x1="14"
+                y1="24"
+                x2="34"
+                y2="24"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <line
+                x1="14"
+                y1="30"
+                x2="26"
+                y2="30"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+            <p>Select a conversation to read it</p>
+            <p class="empty-hint">
+              Press <kbd>/</kbd> to search · <kbd>↑</kbd><kbd>↓</kbd> to
+              navigate
+            </p>
+          </div>
+        </div>
+
+        <div id="thread" hidden>
+          <div class="thread-header">
+            <h2 id="thread-title"></h2>
+            <div id="thread-meta"></div>
+          </div>
+          <div id="messages"></div>
+          <!-- Artifact side panel (absolute, inside #thread) -->
+          <div id="artifact-panel" hidden>
+            <div id="artifact-panel-resize"></div>
+            <div class="artifact-panel-header">
+              <span id="artifact-panel-title"></span>
+              <button id="artifact-panel-close" title="关闭">✕</button>
+            </div>
+            <div id="artifact-panel-body"></div>
+          </div>
+        </div>
+
+        <div id="gallery" hidden>
+          <div class="thread-header">
+            <h2>Media Hub</h2>
+            <div id="gallery-meta">
+              Images, attachments, and artifacts grouped by conversation
+            </div>
+          </div>
+          <div id="gallery-grid"></div>
+        </div>
+
+        <div id="memories-panel" hidden>
+          <div class="thread-header">
+            <h2>Memories</h2>
+            <div id="memories-meta">Claude's memory about you</div>
+          </div>
+          <div id="memories-content"></div>
+        </div>
+
+        <div id="projects-panel" hidden>
+          <div class="thread-header">
+            <h2>Projects</h2>
+            <div id="projects-meta"></div>
+          </div>
+          <div id="projects-content"></div>
+        </div>
+
+        <div id="att-report-panel" hidden>
+          <div class="thread-header">
+            <h2>附件诊断报告</h2>
+            <button id="att-report-refresh-btn" title="重新扫描">
+              🔄 刷新
+            </button>
+            <div id="att-report-meta">
+              以下附件在 Claude 导出中无内容，且未在 source/files/ 找到对应文件
+            </div>
+          </div>
+          <div id="att-report-content"></div>
+        </div>
+      </main>
+    </div>
+    <script src="/static/app.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
